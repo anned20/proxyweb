@@ -19,7 +19,7 @@ __license__ = "GPLv3"
 
 from collections import defaultdict
 from flask import Flask, render_template, request, session
-
+import re
 import mdb
 
 app = Flask(__name__)
@@ -75,14 +75,21 @@ def render_change(server, database, table):
     try:
         error = ""
         message = ""
+        ret = ""
         session['sql'] = request.form["sql"]
-        ret = mdb.execute_change(db, server, session['sql'])
+        select = re.match(r'^SELECT.*$', session['sql'], re.M | re.I)
+        if select:
+            mdb.logging.warning("Processing as select: {}".format(select))
+            content = mdb.execute_adhoc_query(db, server, session['sql'])
+        else:
+            mdb.logging.warning("Processing as change: {}".format(select))
+            ret = mdb.execute_change(db, server, session['sql'])
+            content = mdb.get_table_content(db, server, database, table)
         if "ERROR" in ret:
             error = ret
         else:
             message = "Success"
 
-        content = mdb.get_table_content(db, server, database, table)
         return render_template("show_table_info.html", content=content, error=error, message=message)
     except Exception as e:
         raise ValueError(e)
