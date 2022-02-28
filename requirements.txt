@@ -1,4 +1,4 @@
-Flask==1.1.2
-PyYAML==5.4.1 
-mysql-connector-python==8.0.23
-gunicorn==20.0.4
+Flask==2.0.3
+PyYAML==6.0
+mysql-connector-python==8.0.28
+gunicorn==20.1.0
