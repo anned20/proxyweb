@@ -19,7 +19,7 @@ services:
 
   db1:
     hostname: db1
-    image: percona:5.7.26
+    image: percona/percona-server:5.7.36
     environment:
       MYSQL_ROOT_PASSWORD: secret_password
       MYSQL_PWD: secret_password
@@ -38,7 +38,7 @@ services:
 
   db2:
     hostname: db2
-    image: percona:5.7.26
+    image: percona/percona-server:5.7.36
     environment:
       MYSQL_ROOT_PASSWORD: secret_password
       MYSQL_PWD: secret_password
@@ -57,7 +57,7 @@ services:
 
   db3:
     hostname: db3
-    image: percona:5.7.26
+    image: percona/percona-server:5.7.36
     environment:
       MYSQL_ROOT_PASSWORD: secret_password
       MYSQL_PWD: secret_password
@@ -76,7 +76,7 @@ services:
 
   db4:
     hostname: db4
-    image: percona:5.7.26
+    image: percona/percona-server:5.7.36
     environment:
       MYSQL_ROOT_PASSWORD: secret_password
       MYSQL_PWD: secret_password
