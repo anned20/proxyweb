@@ -24,6 +24,7 @@ import yaml
 import os
 import subprocess
 
+
 logging.basicConfig(level=logging.WARN, format='%(asctime)s - %(levelname)s - %(message)s')
 
 sql_get_databases = "show databases"
@@ -108,8 +109,27 @@ def get_table_content(db, server, database, table):
 
         db['cnf']['servers'][server]['cur'].execute(string)
 
-        content['rows'] =  db['cnf']['servers'][server]['cur'].fetchall()
-        content['column_names'] = [i[0] for i in  db['cnf']['servers'][server]['cur'].description]
+        content['rows'] = db['cnf']['servers'][server]['cur'].fetchall()
+        content['column_names'] = [i[0] for i in db['cnf']['servers'][server]['cur'].description]
+
+        return content
+    except (mysql.connector.Error, mysql.connector.Warning) as e:
+        db['cnf']['servers'][server]['conn'].close()
+        raise ValueError(e)
+
+def execute_adhoc_query(db, server, sql):
+    '''returns with a dict with two keys "column_names" = list and  rows = tuples '''
+    content = {}
+    try:
+        logging.debug("server: {} - sql: {}".format(server, sql))
+        db_connect(db, server=server, dictionary=False)
+
+        logging.debug("query: {}".format(sql))
+
+        db['cnf']['servers'][server]['cur'].execute(sql)
+
+        content['rows'] = db['cnf']['servers'][server]['cur'].fetchall()
+        content['column_names'] = [i[0] for i in db['cnf']['servers'][server]['cur'].description]
 
         return content
     except (mysql.connector.Error, mysql.connector.Warning) as e:
