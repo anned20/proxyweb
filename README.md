@@ -15,6 +15,8 @@ Open Source Web UI for [ProxySQL](https://proxysql.com/)
 - Online config editor
 - Narrow-down content search
 - Paginate content
+- Command history and SQL dropdown menu 
+- Adhoc MySQL queries 
 
 
 
