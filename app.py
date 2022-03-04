@@ -17,6 +17,7 @@ __author__ = "Miklos Mukka Szel"
 __contact__ = "miklos.szel@edmodo.com"
 __license__ = "GPLv3"
 
+import logging
 from collections import defaultdict
 from flask import Flask, render_template, request, session
 import re
@@ -42,10 +43,12 @@ def render_list_dbs():
     try:
         session.clear()
         server = mdb.get_config(config)['global']['default_server']
+        session['history'] = []
         session['server'] = server
         session['dblist'] = mdb.get_all_dbs_and_tables(db, server)
         session['servers'] = mdb.get_servers()
         session['read_only'] = mdb.get_read_only(server)
+        session['misc'] = mdb.get_config(config)['misc']
 
         return render_template("list_dbs.html", server=server)
     except Exception as e:
@@ -64,6 +67,7 @@ def render_show_table_content(server, database="main", table="global_variables")
         session['server'] = server
         session['table'] = table
         session['database'] = database
+        session['misc'] = mdb.get_config(config)['misc']
         session['read_only'] = mdb.get_read_only(server)
         content = mdb.get_table_content(db, server, database, table)
         return render_template("show_table_info.html", content=content)
@@ -77,18 +81,23 @@ def render_change(server, database, table):
         message = ""
         ret = ""
         session['sql'] = request.form["sql"]
-        select = re.match(r'^SELECT.*$', session['sql'], re.M | re.I)
+
+
+        mdb.logging.debug(session['history'])
+        select = re.match(r'^SELECT.*FROM.*$', session['sql'], re.M | re.I)
         if select:
-            mdb.logging.warning("Processing as select: {}".format(select))
             content = mdb.execute_adhoc_query(db, server, session['sql'])
+            content['order'] = 'true'
         else:
-            mdb.logging.warning("Processing as change: {}".format(select))
             ret = mdb.execute_change(db, server, session['sql'])
             content = mdb.get_table_content(db, server, database, table)
+
         if "ERROR" in ret:
             error = ret
         else:
             message = "Success"
+        if session['sql'].replace("\r\n","") not in session['history'] and not error:
+            session['history'].append(session['sql'].replace("\r\n",""))
 
         return render_template("show_table_info.html", content=content, error=error, message=message)
     except Exception as e:
