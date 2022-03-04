@@ -111,7 +111,7 @@ def get_table_content(db, server, database, table):
 
         content['rows'] = db['cnf']['servers'][server]['cur'].fetchall()
         content['column_names'] = [i[0] for i in db['cnf']['servers'][server]['cur'].description]
-
+        content['misc'] = get_config()['misc']
         return content
     except (mysql.connector.Error, mysql.connector.Warning) as e:
         db['cnf']['servers'][server]['conn'].close()
