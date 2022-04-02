@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>{% block title %}ProxyWeb{% endblock %}</title>
+
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="author" content="Miklos 'Mukka' Szel">
+
+        <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
+
+        <!-- Font Awesome -->
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+        <!-- Google Fonts -->
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap">
+        <!-- Bootstrap core CSS -->
+        <link href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.5.0/css/bootstrap.min.css" rel="stylesheet">
+        <!-- Material Design Bootstrap -->
+        <link href="https://cdnjs.cloudflare.com/ajax/libs/mdbootstrap/4.19.1/css/mdb.min.css" rel="stylesheet">
+
+        <!-- MDBootstrap Datatables  -->
+        <link href="https://cdn.jsdelivr.net/npm/mdbootstrap@4.16.0/css/addons/datatables.min.css" rel="stylesheet">
+
+        <!-- JQuery -->
+        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+        <!-- Bootstrap tooltips -->
+        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.4/umd/popper.min.js"></script>
+        <!-- Bootstrap core JavaScript -->
+        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.5.0/js/bootstrap.min.js"></script>
+        <!-- MDB core JavaScript -->
+        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mdbootstrap/4.19.1/js/mdb.min.js"></script>
+
+        <!-- MDBootstrap Datatables  -->
+        <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/mdbootstrap@4.16.0/js/addons/datatables.min.js"></script>
+
+        <script>
+            $(document).ready(function () {
+                $('#proxywebtable').DataTable({
+                   'lengthMenu': [[-1, 100, 50, 25], ['All', 100,50,25]]
+                    {% if content is defined and content['order'] == 'true' %},
+                    'order': [[ 0, 'desc' ]]
+                    {% endif %}
+                });
+
+                $('.dataTables_length').addClass('bs-select');
+            });
+
+            function unEscape(htmlStr) {
+                htmlStr = htmlStr.replace(/&lt;/g , "<");
+                htmlStr = htmlStr.replace(/&gt;/g , ">");
+                htmlStr = htmlStr.replace(/&#34;/g , "\"");
+                htmlStr = htmlStr.replace(/&#39;/g , "\'");
+                htmlStr = htmlStr.replace(/&amp;/g , "&");
+
+                return htmlStr;
+            }
+
+            {% for item in session['misc'] %}
+                {% for subitem in session['misc'][item] %}
+                    let {{ item }}_item_{{loop.index}} = "{{ subitem['sql'] }}";
+                {% endfor %}
+            {% endfor %}
+
+            {% if session['history']  %}
+                {% for item in session['history'][:25]|reverse %}
+                    let history_item_{{loop.index}} = "{{ item }}";
+                {% endfor %}
+            {% endif %}
+        </script>
+    </head>
+    <body>
+        {% include 'partials/nav.html' %}
+
+        <div class="container-fluid pt-4">
+            {% block content %}{% endblock %}
+        </div>
+    </body>
+</html>

@@ -1,26 +1,15 @@
-{% extends 'base.html' %}
+{% extends 'partials/base.html' %}
 
-{% block error  %}
+{% block content %}
+    <div class="row">
+        <div class="col">
+            {% if error %}
+                <div class="note note-danger">
+                    <pre><strong>Error!</strong>{{ error }}</pre>
+                    <br><br>
 
-<nav class="navbar navbar-expand-sm navbar-dark primary-color ">
-    <a class="navbar-brand" href="/">ProxyWeb</a>
-
-    <a class="nav-link" href="/settings/edit/">
-        <i class="fas fa-cog fa-lg white-text"></i> </a>
-
-
-</nav>
-
-
-{% if error %}
-<span class="border border-primary">
-<div class="note note-danger">
-    <pre><strong>Error! </strong>{{ error }}<br><br></pre>
-
-<strong>If this seems settings related you can edit the config by <a href="/settings/edit/">clicking here.</a></strong>
-</span>
-
-
-{%  endif %}
-
+                    <strong>If this seems settings related you can edit the config by <a href="/settings/edit/">clicking here.</a></strong>
+            {% endif %}
+        </div>
+    </div>
 {% endblock %}

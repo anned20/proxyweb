@@ -1,10 +1,5 @@
-{% extends 'base.html' %}
-
-
-{% block content %}
-<nav class="navbar navbar-expand-sm navbar-dark primary-color ">
+<nav class="navbar navbar-expand-sm navbar-dark primary-color">
     <a class="navbar-brand" href="/">ProxyWeb</a>
-
 
     <!-- Collapse button -->
     <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#basicExampleNav"
@@ -14,100 +9,70 @@
 
 
     <div class="container-fluid justify-content-between" id="basicExampleNav">
-
         <ul class="navbar-nav mr-auto navbar-expand-lg">
-
             <!-- ProxySQL menu start -->
-            {% for key,value in session['dblist'][session['server']]|dictsort %}
-            {% if key == session['database'] %}
-            <li class="nav-item dropdown active">
+            {% for key, value in session['dblist'][session['server']]|dictsort %}
+                {% if key == session['database'] %}
+                    <li class="nav-item dropdown active">
                 {% else %}
-            <li class="nav-item dropdown">
+                    <li class="nav-item dropdown">
                 {% endif %}
-
-                <a class="nav-link dropdown-toggle " id="navbarDropdownMenuLink" data-toggle="dropdown"
-                   aria-haspopup="true" aria-expanded="false">{{ key }} </a>
-
-
-                <div class="dropdown-menu dropdown-primary" aria-labelledby="navbarDropdownMenuLink">
-                    {% for item in value %}
-                    <a style="line-height:5px;" class="dropdown-item "
-                       href="/{{ session['server'] }}/{{ key }}/{{  item }}/">{{ item }}</a>
-                    {% endfor %}
-                </div>
-            </li>
+                    <a class="nav-link dropdown-toggle" id="navbarDropdownMenuLink" data-toggle="dropdown"
+                       aria-haspopup="true" aria-expanded="false">{{ key }}</a>
 
 
+                    <div class="dropdown-menu dropdown-primary" aria-labelledby="navbarDropdownMenuLink">
+                        {% for item in value %}
+                            <a style="line-height:5px;" class="dropdown-item"
+                               href="/{{ session['server'] }}/{{ key }}/{{ item }}/">{{ item }}</a>
+                        {% endfor %}
+                    </div>
+                </li>
             {% endfor %}
             <!-- ProxySQL menu end  -->
+
             <!-- misc menu start -->
-
             <li class="nav-item dropdown">
-
-
-                <a class="nav-link dropdown-toggle btn-outline-white " id="navbarDropdownMenuLink"
+                <a class="nav-link dropdown-toggle btn-outline-white" id="navbarDropdownMenuLink"
                    data-toggle="dropdown"
-                   aria-haspopup="true" aria-expanded="false">Misc </a>
+                   aria-haspopup="true" aria-expanded="false">Misc</a>
 
 
                 <div class="dropdown-menu dropdown-primary" aria-labelledby="navbarDropdownMenuLinkMisc">
 
                     <a style="line-height:5px;" class="dropdown-item "
                        href="/{{ session['server'] }}/adhoc/">ProxySQL Report</a>
-
                 </div>
             </li>
             <!-- misc menu  end -->
 
             <!-- servers menu start -->
             <div class="container-fluid justify-content-rigth" id="serverlist">
-
-
-                <ul class="navbar-nav justify-content-right  ">
-
+                <ul class="navbar-nav justify-content-right">
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle btn-outline-white" id="navbarDropdownMenuLinkServers"
                            data-toggle="dropdown"
                            aria-haspopup="true" aria-expanded="false">{{ session['server'] }} </a>
                         <div class="dropdown-menu dropdown-primary" aria-labelledby="navbarDropdownMenuLink">
                             {% for item in session['servers'] %}
-
-                            {% if item == session['server'] %}
-                            <a style="line-height:5px;" class="dropdown-item active" href="">{{ item }}</a>
-                            {% else %}
-                            <a style="line-height:5px;" class="dropdown-item "
-                               href="/{{ item  }}/{{ session['database'] }}/{{ session['table'] }}">{{ item }}</a>
-
-                            {% endif %}
-
+                                {% if item == session['server'] %}
+                                    <a style="line-height:5px;" class="dropdown-item active" href="">{{ item }}</a>
+                                {% else %}
+                                    <a style="line-height:5px;" class="dropdown-item "
+                                       href="/{{ item  }}/{{ session['database'] }}/{{ session['table'] }}">{{ item }}</a>
+                                {% endif %}
                             {% endfor %}
                         </div>
                     </li>
-
                 </ul>
             </div>
             <!-- servers menu end -->
-
         </ul>
 
-
-        <span class="navbar-text white-text">    {{ session['database'] }} - {{ session['table'] }} &nbsp&nbsp   </span>
-
+        <span class="navbar-text white-text">{{ session['database'] }} - {{ session['table'] }} &nbsp&nbsp</span>
 
         <a class="nav-link" href="/settings/edit/">
             <i class="fas fa-cog fa-lg white-text"></i>
         </a>
-
-
     </div>
-
-
 </nav>
-
-
-{%  block show_table_info %}
-{%  endblock %}
-{%  block show_adhoc_report %}
-{%  endblock %}
-
-{% endblock %}
