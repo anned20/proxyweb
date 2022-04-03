@@ -21,4 +21,3 @@ if [ -n "${WEBSERVER_THREADS}" ]; then
 fi
 
 gunicorn --chdir /app wsgi:app -w ${GUNICORN_WORKERS} --threads ${GUNICORN_THREADS} -b 0.0.0.0:${GUNICORN_PORT}
-

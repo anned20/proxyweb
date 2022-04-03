@@ -10,7 +10,7 @@ RUN pip3 install -r requirements.txt
 
 COPY . /app
 RUN cp /app/misc/entry.sh /app/
-RUN chmod 755 /app/entry.sh 
+RUN chmod 755 /app/entry.sh
 
 RUN apt-get update -y && \
     apt-get install  wget   ca-certificates  debsums libncurses6 libatomic1  libaio1  libnuma1 mysql-common  -y

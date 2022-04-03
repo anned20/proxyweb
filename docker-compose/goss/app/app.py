@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-""" Simple Goss based Status page
+"""Simple Goss based Status page
 
 This program is free software: you can redistribute it and/or modify it under
 the terms of the GNU General Public License as published by the Free Software
@@ -19,22 +19,32 @@ __license__ = "GPLv3"
 
 import os
 import json
-from flask import Flask, render_template, request, session
+from flask import Flask, render_template
 
 app = Flask(__name__)
 
 
-@app.route('/')
+@app.route("/")
 def status():
     try:
-        content_json = os.popen('goss  --vars /goss/vars.yaml  -g /goss/goss.yaml validate -f json   -o pretty')
+        content_json = os.popen(
+            " ".join([
+                "goss --vars /goss/vars.yaml",
+                "-g /goss/goss.yaml",
+                "validate",
+                "-f json",
+                "-o pretty"
+            ])
+        )
         content = json.load(content_json)
-        content_ordered = sorted(content["results"], key=lambda k: k['resource-id'])
+        content_ordered = sorted(
+            content["results"],
+            key=lambda k: k["resource-id"]
+        )
+
         return render_template("status.html", content=content_ordered)
     except Exception as e:
         raise ValueError(e)
-
-
 
 
 @app.errorhandler(Exception)
@@ -43,5 +53,5 @@ def handle_exception(e):
     return render_template("error.html", error=e), 500
 
 
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', use_debugger=True)
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", use_debugger=True)

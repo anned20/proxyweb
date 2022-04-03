@@ -13,11 +13,8 @@ RUN dpkg -i /tmp/orchestrator_3.2.3_amd64.deb  /tmp/orchestrator-client_3.2.3_am
 
 WORKDIR /usr/local/orchestrator/
 COPY entry.sh /
-RUN chmod 755 /entry.sh 
+RUN chmod 755 /entry.sh
 COPY orchestrator.conf.json  /etc/orchestrator.conf.json
 RUN rm -rf /var/lib/apt/lists/* && rm /tmp/*.deb
 
 ENTRYPOINT [ "/entry.sh" ]
-
-
-

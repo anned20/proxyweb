@@ -33,6 +33,7 @@ flask_custom_config = mdb.get_config(config)
 for key in flask_custom_config["flask"]:
     app.config[key] = flask_custom_config["flask"][key]
 
+
 @app.route("/")
 def dashboard():
     try:
@@ -49,9 +50,14 @@ def dashboard():
     except Exception as e:
         raise ValueError(e)
 
+
 @app.route("/<server>/")
 @app.route("/<server>/<database>/<table>/")
-def render_show_table_content(server, database="main", table="global_variables"):
+def render_show_table_content(
+    server,
+    database="main",
+    table="global_variables"
+):
     try:
         # refresh the tablelist if changing to a new server
 
@@ -69,6 +75,7 @@ def render_show_table_content(server, database="main", table="global_variables")
     except Exception as e:
         raise ValueError(e)
 
+
 @app.route("/<server>/<database>/<table>/sql/", methods=["GET", "POST"])
 def render_change(server, database, table):
     try:
@@ -76,7 +83,6 @@ def render_change(server, database, table):
         message = ""
         ret = ""
         session["sql"] = request.form["sql"]
-
 
         mdb.logging.debug(session["history"])
         select = re.match(r"^SELECT.*FROM.*$", session["sql"], re.M | re.I)
@@ -91,19 +97,29 @@ def render_change(server, database, table):
             error = ret
         else:
             message = "Success"
-        if session["sql"].replace("\r\n","") not in session["history"] and not error:
-            session["history"].append(session["sql"].replace("\r\n",""))
+        if (session["sql"].replace("\r\n", "") not in session["history"]
+                and not error):
+            session["history"].append(session["sql"].replace("\r\n", ""))
 
-        return render_template("show_table_info.html", content=content, error=error, message=message)
+        return render_template(
+            "show_table_info.html",
+            content=content,
+            error=error,
+            message=message
+        )
     except Exception as e:
         raise ValueError(e)
+
 
 @app.route("/<server>/adhoc/")
 def adhoc_report(server):
     try:
 
         adhoc_results = mdb.execute_adhoc_report(db, server)
-        return render_template("show_adhoc_report.html", adhoc_results=adhoc_results)
+        return render_template(
+            "show_adhoc_report.html",
+            adhoc_results=adhoc_results
+        )
     except Exception as e:
         raise ValueError(e)
 
@@ -124,7 +140,12 @@ def render_settings(action):
             with open(config, "w") as f:
                 f.write(request.form["settings"])
             message = "success"
-        return render_template("settings.html", config_file_content=config_file_content, message=message)
+
+        return render_template(
+            "settings.html",
+            config_file_content=config_file_content,
+            message=message
+        )
     except Exception as e:
         raise ValueError(e)
 

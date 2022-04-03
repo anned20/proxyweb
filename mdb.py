@@ -24,11 +24,15 @@ import yaml
 import subprocess
 
 
-logging.basicConfig(level=logging.WARN, format="%(asctime)s - %(levelname)s - %(message)s")
+logging.basicConfig(
+    level=logging.WARN,
+    format="%(asctime)s - %(levelname)s - %(message)s"
+)
 
 sql_get_databases = "show databases"
 sql_show_table_content = "select * from %s.%s order by 1;"
 sql_show_tables = "show tables from %s;"
+
 
 def get_config(config="config/config.yml"):
     logging.debug("Using file: %s" % (config))
@@ -37,7 +41,7 @@ def get_config(config="config/config.yml"):
             cfg = yaml.safe_load(yml)
         return cfg
     except Exception:
-        raise ValueError("Error opening or parsing the file: %" % config)
+        raise ValueError("Error opening or parsing the file: %s" % config)
 
 
 def db_connect(db, server, autocommit=False, buffered=False, dictionary=True):
@@ -46,9 +50,14 @@ def db_connect(db, server, autocommit=False, buffered=False, dictionary=True):
 
         config = db["cnf"]["servers"][server]["dsn"][0]
         logging.debug(db["cnf"]["servers"][server]["dsn"][0])
-        db["cnf"]["servers"][server]["conn"] = mysql.connector.connect(**config,raise_on_warnings=True, get_warnings=True, connection_timeout=3, )
+        db["cnf"]["servers"][server]["conn"] = mysql.connector.connect(
+            **config,
+            raise_on_warnings=True,
+            get_warnings=True,
+            connection_timeout=3
+        )
 
-        if  db["cnf"]["servers"][server]["conn"].is_connected():
+        if db["cnf"]["servers"][server]["conn"].is_connected():
             logging.debug("Connected successfully to %s as %s db=%s" % (
                 config["host"],
                 config["user"],
@@ -57,9 +66,14 @@ def db_connect(db, server, autocommit=False, buffered=False, dictionary=True):
         db["cnf"]["servers"][server]["conn"] .autocommit = autocommit
         db["cnf"]["servers"][server]["conn"] .get_warnings = True
 
-        db["cnf"]["servers"][server]["cur"] = db["cnf"]["servers"][server]["conn"].cursor(buffered=buffered,
-                                                                                            dictionary=dictionary)
-        logging.debug("buffered: %s, dictionary: %s, autocommit: %s" % (buffered, dictionary, autocommit))
+        db["cnf"]["servers"][server]["cur"] = (
+            db["cnf"]["servers"][server]["conn"].cursor(
+                buffered=buffered,
+                dictionary=dictionary
+            )
+        )
+        logging.debug("buffered: %s, dictionary: %s, autocommit: %s" %
+                      (buffered, dictionary, autocommit))
 
     except (mysql.connector.Error, mysql.connector.Warning) as e:
         raise ValueError(e)
@@ -67,24 +81,27 @@ def db_connect(db, server, autocommit=False, buffered=False, dictionary=True):
 
 def get_all_dbs_and_tables(db, server):
     all_dbs = {server: {}}
-    try:
 
+    try:
         db_connect(db, server=server)
         db["cnf"]["servers"][server]["cur"].execute(sql_get_databases)
         table_exception_list = []
 
         if "hide_tables" not in db["cnf"]["servers"][server]:
-            #it there is a global hide_tables defined and there is no local one:
+            # it there is a global hide_tables defined and
+            # there is no local one:
             if len(db["cnf"]["global"]["hide_tables"]) > 0:
                 table_exception_list = db["cnf"]["global"]["hide_tables"]
         else:
-                table_exception_list = db["cnf"]["servers"][server]["hide_tables"]
+            table_exception_list = db["cnf"]["servers"][server]["hide_tables"]
 
         for i in db["cnf"]["servers"][server]["cur"].fetchall():
 
             all_dbs[server][i["name"]] = []
 
-            db["cnf"]["servers"][server]["cur"].execute(sql_show_tables % i["name"])
+            db["cnf"]["servers"][server]["cur"].execute(
+                sql_show_tables % i["name"]
+            )
             for table in db["cnf"]["servers"][server]["cur"].fetchall():
                 # hide tables as per global or per server config
                 if table["tables"] not in table_exception_list:
@@ -96,10 +113,16 @@ def get_all_dbs_and_tables(db, server):
 
 
 def get_table_content(db, server, database, table):
-    """returns with a dict with two keys "column_names" = list and  rows = tuples """
+    """returns with a dict with two keys
+    "column_names" = list and rows = tuples"""
     content = {}
+
     try:
-        logging.debug("server: {} - db: {} - table:{}".format(server, database, table))
+        logging.debug("server: {} - db: {} - table:{}".format(
+            server,
+            database,
+            table
+        ))
         db_connect(db, server=server, dictionary=False)
         data = (database, table)
 
@@ -109,16 +132,22 @@ def get_table_content(db, server, database, table):
         db["cnf"]["servers"][server]["cur"].execute(string)
 
         content["rows"] = db["cnf"]["servers"][server]["cur"].fetchall()
-        content["column_names"] = [i[0] for i in db["cnf"]["servers"][server]["cur"].description]
+        content["column_names"] = [
+            i[0] for i in db["cnf"]["servers"][server]["cur"].description
+        ]
         content["misc"] = get_config()["misc"]
         return content
     except (mysql.connector.Error, mysql.connector.Warning) as e:
         db["cnf"]["servers"][server]["conn"].close()
+
         raise ValueError(e)
 
+
 def execute_adhoc_query(db, server, sql):
-    """returns with a dict with two keys "column_names" = list and  rows = tuples """
+    """returns with a dict with two keys
+    "column_names" = list and rows = tuples"""
     content = {}
+
     try:
         logging.debug("server: {} - sql: {}".format(server, sql))
         db_connect(db, server=server, dictionary=False)
@@ -128,17 +157,23 @@ def execute_adhoc_query(db, server, sql):
         db["cnf"]["servers"][server]["cur"].execute(sql)
 
         content["rows"] = db["cnf"]["servers"][server]["cur"].fetchall()
-        content["column_names"] = [i[0] for i in db["cnf"]["servers"][server]["cur"].description]
+        content["column_names"] = [
+            i[0] for i in db["cnf"]["servers"][server]["cur"].description
+        ]
 
         return content
     except (mysql.connector.Error, mysql.connector.Warning) as e:
         db["cnf"]["servers"][server]["conn"].close()
+
         raise ValueError(e)
 
+
 def execute_adhoc_report(db, server):
-    """returns with a dict with two keys "column_names" = list and  rows = tuples """
+    """returns with a dict with two keys
+    "column_names" = list and rows = tuples"""
     adhoc_results = []
     result = {}
+
     try:
         db_connect(db, server=server, dictionary=False)
 
@@ -152,7 +187,11 @@ def execute_adhoc_report(db, server):
                 result["title"] = item["title"]
                 result["sql"] = item["sql"]
                 result["info"] = item["info"]
-                result["column_names"] = [i[0] for i in db["cnf"]["servers"][server]["cur"].description]
+                result["column_names"] = [
+                    i[0] for i in (
+                        db["cnf"]["servers"][server]["cur"].description
+                    )
+                ]
                 adhoc_results.append(result.copy())
         else:
             pass
@@ -173,6 +212,7 @@ def get_servers():
     except Exception:
         raise ValueError("Cannot get the serverlist from the config file")
 
+
 def get_read_only(server):
     try:
         config = get_config()
@@ -181,23 +221,40 @@ def get_read_only(server):
         else:
             read_only = config["servers"][server]["read_only"]
         return read_only
-    except:
+    except Exception:
         raise ValueError("Cannot get read_only status from the config file")
-
 
 
 def execute_change(db, server, sql):
     try:
-        # this is a temporary solution as using the  mysql.connector for certain writes ended up with weird results, ProxySQL
-        # is not a MySQL server after all. We"re investigating the issue.
+        # this is a temporary solution as using the mysql.connector for
+        # certain writes ended up with weird results, ProxySQL is not a MySQL
+        # server after all. We're investigating the issue.
         db_connect(db, server=server, dictionary=False)
         logging.debug(sql)
         logging.debug(server)
         dsn = get_config()["servers"][server]["dsn"][0]
-        cmd = ("mysql -h %s -P %s -u %s -p%s main -e '%s'" % (dsn["host"], dsn["port"], dsn["user"], dsn["passwd"], sql))
-        p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        cmd = ("mysql -h %s -P %s -u %s -p%s main -e '%s'" % (
+            dsn["host"],
+            dsn["port"],
+            dsn["user"],
+            dsn["passwd"],
+            sql
+        ))
+        p = subprocess.Popen(
+            cmd,
+            shell=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE
+        )
         _, stderr = p.communicate()
 
-        return stderr.decode().replace("mysql: [Warning] Using a password on the command line interface can be insecure.\n","")
+        return stderr.decode().replace(
+            "".join([
+                "mysql: [Warning] Using a password on the",
+                " command line interface can be insecure.\n"
+            ]),
+            ""
+        )
     except (mysql.connector.Error, mysql.connector.Warning) as e:
         return e
