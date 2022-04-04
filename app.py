@@ -133,28 +133,31 @@ def adhoc_report(server):
         raise ValueError(e)
 
 
-@app.route("/settings/<action>/", methods=["GET", "POST"])
-def render_settings(action):
+@app.route("/settings", methods=["GET", "POST"])
+def render_settings():
     try:
-        config_file_content = ""
-        message = ""
-        if action == "edit":
+        if request.method == "GET":
+            config_file_content = ""
+
             with open(config, "r") as f:
                 config_file_content = f.read()
-        if action == "save":
-            # back it up first
+
+            return render_template(
+                "settings.html",
+                config_file_content=config_file_content,
+            )
+
+        if request.method == "POST":
             with open(config, "r") as src, open(config + ".bak", "w") as dest:
                 dest.write(src.read())
 
             with open(config, "w") as f:
                 f.write(request.form["settings"])
-            message = "success"
 
-        return render_template(
-            "settings.html",
-            config_file_content=config_file_content,
-            message=message
-        )
+            return render_template(
+                "settings.html",
+                message="success",
+            )
     except Exception as e:
         raise ValueError(e)
 
