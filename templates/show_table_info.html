@@ -22,13 +22,17 @@
                                         {% for subitem in session['misc'][item] %}
                                             <li class="dropdown-item">
                                                 <a class="dropdown-item"
-                                                    onclick="
-                                                        let {{ item }}_{{ loop.index }}=unEscape({{ item }}_item_{{ loop.index }})
-                                                        document.getElementById('sql').value={{ item }}_{{ loop.index }}.replace(/;/g,';\r\n');
-                                                        document.getElementById('sql').focus();
-                                                        document.getElementById('infotarget').innerText='{{ subitem['info']|safe }}';
-                                                        return false;"
-                                                    href="#">
+                                                    onclick='
+                                                        document.getElementById("sql").value={{ subitem['sql']|tojson }};
+                                                        document.getElementById("sql").focus();
+                                                        {% if subitem['info'] %}
+                                                        document.getElementById("infotarget").querySelector("p").innerText={{ subitem['info']|tojson|safe|nl2br }};
+                                                        document.getElementById("infotarget").classList.remove("d-none");
+                                                        {% else %}
+                                                        document.getElementById("infotarget").classList.add("d-none");
+                                                        {% endif %}
+                                                        return false;
+                                                    ' href="#">
                                                     {{ subitem['title'] }}
                                                 </a>
                                             </li>
@@ -48,11 +52,12 @@
                                         {% for item in session['history'][:25]|reverse %}
                                             <li class="dropdown-item">
                                                 <a class="dropdown-item"
-                                                    onclick="history_item_{{ loop.index }}=unEscape(history_item_{{ loop.index }})
-                                                        document.getElementById('sql').value=history_item_{{ loop.index }}.replace(/;/g,';\r\n');;
-                                                        document.getElementById('sql').focus();
-                                                        return false;"
-                                                    href="#">
+                                                    onclick='
+                                                        document.getElementById("sql").value={{ item|tojson }};
+                                                        document.getElementById("sql").focus();
+                                                        document.getElementById("infotarget").classList.add("d-none");
+                                                        return false;
+                                                    ' href="#">
                                                     {{ loop.index }}. {{ item|truncate(80, True) }}
                                                 </a>
                                             </li>
@@ -61,19 +66,11 @@
                                 </li>
                             {% endif %}
                         </ul>
-
-                        <button class="btn-outline-primary waves-effect btn-floating " type="button" data-toggle="collapse"
-                                data-target="#collapse4242"
-                                aria-expanded="false" aria-controls="collapse"><i
-                                class="fa-solid fa-circle-info  fa-lg"></i>
-                        </button>
                     </div>
 
-                    <!-- Collapsible element -->
-                    <div class="collapse text-left dark-grey-text" id="collapse4242">
+                    <div id="infotarget" class="text-left dark-grey-text d-none">
                         <div class="container my-3 py-3 z-depth-1">
-                            <p id="infotarget" class="font-weight-bold "></p>
-                            <section class="dark-grey-text "></section>
+                            <p></p>
                         </div>
                     </div>
 

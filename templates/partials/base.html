@@ -44,28 +44,6 @@
 
                 $('.dataTables_length').addClass('bs-select');
             });
-
-            function unEscape(htmlStr) {
-                htmlStr = htmlStr.replace(/&lt;/g , "<");
-                htmlStr = htmlStr.replace(/&gt;/g , ">");
-                htmlStr = htmlStr.replace(/&#34;/g , "\"");
-                htmlStr = htmlStr.replace(/&#39;/g , "\'");
-                htmlStr = htmlStr.replace(/&amp;/g , "&");
-
-                return htmlStr;
-            }
-
-            {% for item in session['misc'] %}
-                {% for subitem in session['misc'][item] %}
-                    let {{ item }}_item_{{loop.index}} = "{{ subitem['sql'] }}";
-                {% endfor %}
-            {% endfor %}
-
-            {% if session['history']  %}
-                {% for item in session['history'][:25]|reverse %}
-                    let history_item_{{loop.index}} = "{{ item }}";
-                {% endfor %}
-            {% endif %}
         </script>
     </head>
     <body>

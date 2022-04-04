@@ -19,8 +19,9 @@ __license__ = "GPLv3"
 
 from collections import defaultdict
 from flask import Flask, render_template, request, session
-import re
+from markupsafe import escape
 import mdb
+import re
 
 app = Flask(__name__)
 
@@ -38,6 +39,7 @@ for key in flask_custom_config["flask"]:
 def dashboard():
     try:
         session.clear()
+
         server = mdb.get_config(config)["global"]["default_server"]
         session["history"] = []
         session["server"] = server
@@ -69,9 +71,14 @@ def render_show_table_content(
         session["table"] = table
         session["database"] = database
         session["misc"] = mdb.get_config(config)["misc"]
-        session["read_only"] = mdb.get_read_only(server)
+
         content = mdb.get_table_content(db, server, database, table)
-        return render_template("show_table_info.html", content=content)
+
+        return render_template(
+            "show_table_info.html",
+            content=content,
+            read_only=mdb.get_read_only(server),
+        )
     except Exception as e:
         raise ValueError(e)
 
@@ -86,6 +93,7 @@ def render_change(server, database, table):
 
         mdb.logging.debug(session["history"])
         select = re.match(r"^SELECT.*FROM.*$", session["sql"], re.M | re.I)
+
         if select:
             content = mdb.execute_adhoc_query(db, server, session["sql"])
             content["order"] = "true"
@@ -97,6 +105,7 @@ def render_change(server, database, table):
             error = ret
         else:
             message = "Success"
+
         if (session["sql"].replace("\r\n", "") not in session["history"]
                 and not error):
             session["history"].append(session["sql"].replace("\r\n", ""))
@@ -114,8 +123,8 @@ def render_change(server, database, table):
 @app.route("/<server>/adhoc/")
 def adhoc_report(server):
     try:
-
         adhoc_results = mdb.execute_adhoc_report(db, server)
+
         return render_template(
             "show_adhoc_report.html",
             adhoc_results=adhoc_results
@@ -154,6 +163,14 @@ def render_settings(action):
 def handle_exception(e):
     print(e)
     return render_template("error.html", error=e), 500
+
+
+@app.template_filter("nl2br")
+def nl2br(value):
+    """Converts newlines in text to HTML-tags"""
+    result = "<br>".join(re.split(r"(?:\r\n|\r|\n)", escape(value)))
+
+    return result
 
 
 if __name__ == "__main__":
