@@ -1,4 +1,4 @@
-from typing import List, Mapping, Optional
+from typing import Dict, List, Mapping, Optional
 import json_fix
 
 
@@ -90,10 +90,41 @@ class ServersConfig(AttrDict):
         })
 
 
-class MiscConfig(AttrDict):
-    def __init__(self, config):
+class MiscQuery(AttrDict):
+    title: str
+    info: Optional[str]
+    sql: str
+
+    def __init__(self, query):
         super().__init__({
-            name: config[name] for name in config
+            "title": query["title"],
+            "info": query["info"] or None,
+            "sql": query["sql"],
+        })
+
+
+class MiscCategory(AttrDict):
+    name: str
+    queries: List[MiscQuery]
+
+    def __init__(self, name, category):
+        super().__init__({
+            "name": name,
+            "queries": [MiscQuery(query) for query in category],
+        })
+
+
+class MiscConfig(AttrDict):
+    categories: Dict[str, MiscCategory]
+
+    def __init__(self, config):
+        categories = [MiscCategory(name, category) for name, category in config.items()]
+
+        # Sort categories by name
+        categories.sort(key=lambda c: c.name)
+
+        super().__init__({
+            "categories": {c.name: c for c in categories},
         })
 
 

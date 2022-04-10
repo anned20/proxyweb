@@ -13,27 +13,27 @@
                         </button>
 
                         <ul class="dropdown-menu multi-level" role="menu" aria-labelledby="dropdownMenu">
-                            {% for item in session['misc']|sort %}
+                            {% for name, item in misc.categories.items() %}
                                 <li class="dropdown-divider"></li>
                                 <li class="dropdown-submenu">
-                                    <a class="dropdown-item" class="dropdown-item" tabindex="-1" href="#">{{ item }}</a>
+                                    <a class="dropdown-item" class="dropdown-item" tabindex="-1" href="#">{{ name }}</a>
 
                                     <ul class="dropdown-menu">
-                                        {% for subitem in session['misc'][item] %}
+                                        {% for subitem in item.queries %}
                                             <li class="dropdown-item">
                                                 <a class="dropdown-item"
                                                     onclick='
-                                                        document.getElementById("sql").value={{ subitem['sql']|tojson }};
+                                                        document.getElementById("sql").value={{ subitem.sql|tojson }};
                                                         document.getElementById("sql").focus();
-                                                        {% if subitem['info'] %}
-                                                        document.getElementById("infotarget").querySelector("p").innerText={{ subitem['info']|tojson|safe|nl2br }};
+                                                        {% if subitem.info %}
+                                                        document.getElementById("infotarget").querySelector("p").innerText={{ subitem.info|tojson|safe|nl2br }};
                                                         document.getElementById("infotarget").classList.remove("d-none");
                                                         {% else %}
                                                         document.getElementById("infotarget").classList.add("d-none");
                                                         {% endif %}
                                                         return false;
                                                     ' href="#">
-                                                    {{ subitem['title'] }}
+                                                    {{ subitem.title }}
                                                 </a>
                                             </li>
                                         {% endfor %}
