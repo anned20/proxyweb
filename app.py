@@ -21,6 +21,7 @@ from collections import defaultdict
 from typing import Tuple
 from flask import Flask, render_template, request, session
 from markupsafe import escape
+from lib.config import InvalidConfig, parse_config
 import mdb
 import re
 import logging
@@ -38,7 +39,13 @@ config_file = "config/config.yml"
 db = defaultdict(lambda: defaultdict(dict))
 
 # read/apply the flask config from the config file
-config = mdb.get_config(config_file)
+try:
+    config = mdb.get_config(config_file)
+except InvalidConfig as e:
+    logging.fatal(e)
+
+    exit(1)
+
 flask_config = config.flask.items()
 for key, value in flask_config:
     app.config[key] = value
@@ -145,19 +152,30 @@ def render_settings() -> str:
         )
 
     if request.method == "POST":
-        with (
-            open(config_file, "r") as src,
-            open(config_file + ".bak", "w") as dest
-        ):
-            dest.write(src.read())
+        new_config = request.form["settings"]
 
-        with open(config_file, "w") as f:
-            f.write(request.form["settings"])
+        try:
+            parse_config(new_config)
 
-        return render_template(
-            "settings.html",
-            message="success",
-        )
+            with (
+                open(config_file, "r") as src,
+                open(config_file + ".bak", "w") as dest
+            ):
+                dest.write(src.read())
+
+            with open(config_file, "w") as f:
+                f.write(request.form["settings"])
+
+            return render_template(
+                "settings.html",
+                message="success",
+            )
+        except InvalidConfig as e:
+            return render_template(
+                "settings.html",
+                config_file_content=request.form["settings"],
+                error=e
+            )
 
     raise Exception("Wrong method")
 

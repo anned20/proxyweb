@@ -77,7 +77,7 @@ class Server(AttrDict):
     def __init__(self, name, server):
         super().__init__({
             "name": name,
-            "dsn": ServerDsn(server["dsn"][0]),
+            "dsn": ServerDsn(server["dsn"]),
             "read_only": server["read_only"] if "read_only" in server else None,
             "hide_tables": server["hide_tables"] if "hide_tables" in server else None,
         })

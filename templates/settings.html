@@ -4,13 +4,20 @@
     <div class="row">
         <div class="col">
             {% if message %}
-                <span class="border border-primary">
-                    <div class="note note-success">
-                        <pre><strong>Saving the config was successful!</strong></pre>
-                        <strong>Click <a href="/">here</a> to activate it</strong>
-                    </div>
-                </span>
-            {% else %}
+                <div class="note note-success">
+                    <pre><strong>Saving the config was successful!</strong></pre>
+                    <strong>Click <a href="/">here</a> to activate it</strong>
+                </div>
+            {% endif %}
+
+            {% if error %}
+                <div class="note note-danger">
+                    <strong>Configuration validation failed</strong>
+                    <pre>{{ error }}</pre>
+                </div>
+            {% endif %}
+
+            {% if not message %}
                 <div class="form-group text-monospace blue-border-focus">
                     <form action="/settings" method="post">
                         <div class="form-group">
