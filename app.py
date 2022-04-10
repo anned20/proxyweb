@@ -22,17 +22,25 @@ from flask import Flask, render_template, request, session
 from markupsafe import escape
 import mdb
 import re
+import logging
+
+
+logging.basicConfig(
+    level=logging.WARN,
+    format="%(asctime)s - %(levelname)s - %(message)s"
+)
 
 app = Flask(__name__)
 
-config = "config/config.yml"
+config_file = "config/config.yml"
 
 db = defaultdict(lambda: defaultdict(dict))
 
 # read/apply the flask config from the config file
-flask_custom_config = mdb.get_config(config)
-for key in flask_custom_config["flask"]:
-    app.config[key] = flask_custom_config["flask"][key]
+config = mdb.get_config(config_file)
+flask_config = config.flask.items()
+for key, value in flask_config:
+    app.config[key] = value
 
 
 @app.route("/")
@@ -40,13 +48,15 @@ def dashboard():
     try:
         session.clear()
 
-        server = mdb.get_config(config)["global"]["default_server"]
+        config = mdb.get_config(config_file)
+
+        server = config.glob.default_server
         session["history"] = []
         session["server"] = server
         session["dblist"] = mdb.get_all_dbs_and_tables(db, server)
         session["servers"] = mdb.get_servers()
         session["read_only"] = mdb.get_read_only(server)
-        session["misc"] = mdb.get_config(config)["misc"]
+        session["misc"] = mdb.get_config(config_file)["misc"]
 
         return render_template("dashboard.html", server=server)
     except Exception as e:
@@ -70,7 +80,7 @@ def render_show_table_content(
         session["server"] = server
         session["table"] = table
         session["database"] = database
-        session["misc"] = mdb.get_config(config)["misc"]
+        session["misc"] = mdb.get_config(config_file)["misc"]
 
         content = mdb.get_table_content(db, server, database, table)
 
@@ -139,7 +149,7 @@ def render_settings():
         if request.method == "GET":
             config_file_content = ""
 
-            with open(config, "r") as f:
+            with open(config_file, "r") as f:
                 config_file_content = f.read()
 
             return render_template(
@@ -148,10 +158,13 @@ def render_settings():
             )
 
         if request.method == "POST":
-            with open(config, "r") as src, open(config + ".bak", "w") as dest:
+            with (
+                open(config_file, "r") as src,
+                open(config_file + ".bak", "w") as dest
+            ):
                 dest.write(src.read())
 
-            with open(config, "w") as f:
+            with open(config_file, "w") as f:
                 f.write(request.form["settings"])
 
             return render_template(

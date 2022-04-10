@@ -18,63 +18,59 @@ __contact__ = "miklos.szel@edmodo.com"
 __license__ = "GPLv3"
 
 
+from typing import Tuple
 import mysql.connector
+from mysql.connector.connection import MySQLConnection, MySQLCursor
 import logging
-import yaml
 import subprocess
+from lib import config
 
-
-logging.basicConfig(
-    level=logging.WARN,
-    format="%(asctime)s - %(levelname)s - %(message)s"
-)
 
 sql_get_databases = "show databases"
 sql_show_table_content = "select * from %s.%s order by 1;"
 sql_show_tables = "show tables from %s;"
 
 
-def get_config(config="config/config.yml"):
-    logging.debug("Using file: %s" % (config))
-    try:
-        with open(config, "r") as yml:
-            cfg = yaml.safe_load(yml)
-        return cfg
-    except Exception:
-        raise ValueError("Error opening or parsing the file: %s" % config)
+def get_config(file="config/config.yml"):
+    cfg = config.parse_config_file(file)
+
+    return cfg
 
 
-def db_connect(db, server, autocommit=False, buffered=False, dictionary=True):
+def db_connect(
+    db,
+    server,
+    autocommit=False,
+    buffered=False,
+    dictionary=True
+) -> Tuple[MySQLConnection, MySQLCursor]:
     try:
         db["cnf"] = get_config()
 
-        config = db["cnf"]["servers"][server]["dsn"][0]
-        logging.debug(db["cnf"]["servers"][server]["dsn"][0])
-        db["cnf"]["servers"][server]["conn"] = mysql.connector.connect(
-            **config,
+        server_config = db["cnf"].servers[server].dsn
+        logging.debug(server_config)
+
+        conn = mysql.connector.connect(
+            **server_config,
             raise_on_warnings=True,
             get_warnings=True,
             connection_timeout=3
         )
 
-        if db["cnf"]["servers"][server]["conn"].is_connected():
-            logging.debug("Connected successfully to %s as %s db=%s" % (
-                config["host"],
-                config["user"],
-                config["db"]))
+        if conn.is_connected():
+            logging.debug(f"Connected to {server_config.db} as {server_config.user} on {server_config.host}")
 
-        db["cnf"]["servers"][server]["conn"] .autocommit = autocommit
-        db["cnf"]["servers"][server]["conn"] .get_warnings = True
+        conn.autocommit = autocommit
+        conn.get_warnings = True
 
-        db["cnf"]["servers"][server]["cur"] = (
-            db["cnf"]["servers"][server]["conn"].cursor(
-                buffered=buffered,
-                dictionary=dictionary
-            )
+        cursor = conn.cursor(
+            buffered=buffered,
+            dictionary=dictionary
         )
-        logging.debug("buffered: %s, dictionary: %s, autocommit: %s" %
-                      (buffered, dictionary, autocommit))
 
+        logging.debug(f"Buffered: {buffered}, dictionary: {dictionary}, autocommit: {autocommit}")
+
+        return conn, cursor
     except (mysql.connector.Error, mysql.connector.Warning) as e:
         raise ValueError(e)
 
@@ -83,30 +79,29 @@ def get_all_dbs_and_tables(db, server):
     all_dbs = {server: {}}
 
     try:
-        db_connect(db, server=server)
-        db["cnf"]["servers"][server]["cur"].execute(sql_get_databases)
-        table_exception_list = []
+        _, cur = db_connect(db, server=server)
 
-        if "hide_tables" not in db["cnf"]["servers"][server]:
-            # it there is a global hide_tables defined and
-            # there is no local one:
-            if len(db["cnf"]["global"]["hide_tables"]) > 0:
-                table_exception_list = db["cnf"]["global"]["hide_tables"]
-        else:
-            table_exception_list = db["cnf"]["servers"][server]["hide_tables"]
+        cur.execute(sql_get_databases)
 
-        for i in db["cnf"]["servers"][server]["cur"].fetchall():
+        table_exception_list = db["cnf"]["glob"]["hide_tables"]\
+            if "hide_tables" in db["cnf"]["glob"] else []
 
+        if db["cnf"]["servers"][server]["hide_tables"]:
+            table_exception_list += db["cnf"]["servers"][server]["hide_tables"]
+
+        for i in cur.fetchall():
             all_dbs[server][i["name"]] = []
 
-            db["cnf"]["servers"][server]["cur"].execute(
+            cur.execute(
                 sql_show_tables % i["name"]
             )
-            for table in db["cnf"]["servers"][server]["cur"].fetchall():
+            for table in cur.fetchall():
                 # hide tables as per global or per server config
                 if table["tables"] not in table_exception_list:
                     all_dbs[server][i["name"]].append(table["tables"])
-        db["cnf"]["servers"][server]["cur"].close()
+
+        cur.close()
+
         return all_dbs
     except (mysql.connector.Error, mysql.connector.Warning) as e:
         raise ValueError(e)
@@ -123,17 +118,17 @@ def get_table_content(db, server, database, table):
             database,
             table
         ))
-        db_connect(db, server=server, dictionary=False)
+        _, cur = db_connect(db, server=server, dictionary=False)
         data = (database, table)
 
         string = (sql_show_table_content % data)
         logging.debug("query: {}".format(string))
 
-        db["cnf"]["servers"][server]["cur"].execute(string)
+        cur.execute(string)
 
-        content["rows"] = db["cnf"]["servers"][server]["cur"].fetchall()
+        content["rows"] = cur.fetchall()
         content["column_names"] = [
-            i[0] for i in db["cnf"]["servers"][server]["cur"].description
+            i[0] for i in cur.description
         ]
         content["misc"] = get_config()["misc"]
         return content
@@ -150,15 +145,15 @@ def execute_adhoc_query(db, server, sql):
 
     try:
         logging.debug("server: {} - sql: {}".format(server, sql))
-        db_connect(db, server=server, dictionary=False)
+        _, cur = db_connect(db, server=server, dictionary=False)
 
         logging.debug("query: {}".format(sql))
 
-        db["cnf"]["servers"][server]["cur"].execute(sql)
+        cur.execute(sql)
 
-        content["rows"] = db["cnf"]["servers"][server]["cur"].fetchall()
+        content["rows"] = cur.fetchall()
         content["column_names"] = [
-            i[0] for i in db["cnf"]["servers"][server]["cur"].description
+            i[0] for i in cur.description
         ]
 
         return content
@@ -175,22 +170,20 @@ def execute_adhoc_report(db, server):
     result = {}
 
     try:
-        db_connect(db, server=server, dictionary=False)
+        _, cur = db_connect(db, server=server, dictionary=False)
 
         config = get_config()
         if "adhoc_report" in config["misc"]:
             for item in config["misc"]["adhoc_report"]:
                 logging.debug("query: {}".format(item))
-                db["cnf"]["servers"][server]["cur"].execute(item["sql"])
+                cur.execute(item["sql"])
 
-                result["rows"] = db["cnf"]["servers"][server]["cur"].fetchall()
+                result["rows"] = cur.fetchall()
                 result["title"] = item["title"]
                 result["sql"] = item["sql"]
                 result["info"] = item["info"]
                 result["column_names"] = [
-                    i[0] for i in (
-                        db["cnf"]["servers"][server]["cur"].description
-                    )
+                    i[0] for i in cur.description
                 ]
                 adhoc_results.append(result.copy())
         else:
