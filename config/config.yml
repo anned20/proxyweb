@@ -95,6 +95,11 @@ misc:
         Modify a variable.
         https://proxysql.com/documentation/proxysql-configuration/
       sql: "SET mysql-max_connections = '4096';"
+      variables:
+        max_connections:
+          type: integer
+          label: Max connections
+          default: 4096
 
     - title: "Set server to OFFLINE_SOFT status"
       info: |

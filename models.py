@@ -1,4 +1,4 @@
-from typing import Dict, List, Mapping, Optional
+from typing import Dict, List, Literal, Mapping, Optional, Union
 import json_fix
 
 
@@ -90,16 +90,37 @@ class ServersConfig(AttrDict):
         })
 
 
+class MiscQueryVariable(AttrDict):
+    type: Literal["string", "integer", "float", "boolean"]
+    label: str
+    default: Optional[Union[str, int, float, bool]]
+
+    def __init__(self, variable):
+        super().__init__({
+            "type": variable["type"],
+            "label": variable["label"],
+            "default": variable["default"] if "default" in variable else None,
+        })
+
+
 class MiscQuery(AttrDict):
     title: str
     info: Optional[str]
     sql: str
+    variables: Dict[str, MiscQueryVariable]
 
     def __init__(self, query):
+        variables = {}
+
+        if "variables" in query:
+            for name, variable in query["variables"].items():
+                variables[name] = MiscQueryVariable(variable)
+
         super().__init__({
             "title": query["title"],
             "info": query["info"] or None,
             "sql": query["sql"],
+            "variables": variables,
         })
 
 

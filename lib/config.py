@@ -1,4 +1,5 @@
 from voluptuous.schema_builder import ALLOW_EXTRA, Extra, Required
+from voluptuous.validators import Any, Coerce
 import yaml
 
 from models import Config
@@ -15,7 +16,7 @@ server_config_schema = Schema({
     Extra: {
         Required("dsn"): {
             Required("host"): str,
-            Required("port"): Schema(int, str),
+            Required("port"): Coerce(int),
             Required("user"): str,
             Required("passwd"): str,
             Required("db"): str,
@@ -31,6 +32,13 @@ misc_config_schema = Schema({
             Required("title"): str,
             Required("info"): str,
             Required("sql"): str,
+            "variables": {
+                Extra: {
+                    Required("type"): Any("string", "integer", "float", "boolean"),
+                    Required("label"): str,
+                    "default": Any(str, int, float, bool),
+                }
+            }
         }
     ]
 })
