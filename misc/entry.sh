@@ -1,4 +1,5 @@
-#!/bin/bash
+#!/bin/ash
+
 CONFIG="/app/config/config.yml"
 GUNICORN_PORT=5000
 GUNICORN_WORKERS=2

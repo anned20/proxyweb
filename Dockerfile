@@ -1,23 +1,18 @@
-FROM python:3.9-slim-buster
+FROM python:3.10-alpine
 
-LABEL maintainer="miklos.szel@edmodo.com"
-
-COPY ./requirements.txt /app/requirements.txt
+LABEL maintainer="annedouwe@bouma.tech"
 
 WORKDIR /app
+
+COPY ./requirements.txt requirements.txt
 
 RUN pip3 install -r requirements.txt
 
 COPY . /app
-RUN cp /app/misc/entry.sh /app/
-RUN chmod 755 /app/entry.sh
+RUN cp /app/misc/entry.sh /app/ && chmod +x /app/entry.sh
 
-RUN apt-get update -y && \
-    apt-get install  wget   ca-certificates  debsums libncurses6 libatomic1  libaio1  libnuma1 mysql-common  -y
-RUN wget https://downloads.percona.com/downloads/Percona-Server-5.7/Percona-Server-5.7.36-39/binary/debian/buster/x86_64/percona-server-common-5.7_5.7.36-39-1.buster_amd64.deb -O /tmp/percona-server-common-5.7_5.7.36-39-1.buster_amd64.deb
-RUN wget https://downloads.percona.com/downloads/Percona-Server-5.7/Percona-Server-5.7.36-39/binary/debian/buster/x86_64/percona-server-client-5.7_5.7.36-39-1.buster_amd64.deb -O /tmp/percona-server-client-5.7_5.7.36-39-1.buster_amd64.deb
-RUN dpkg -i /tmp/percona-server-common-5.7_5.7.36-39-1.buster_amd64.deb /tmp/percona-server-client-5.7_5.7.36-39-1.buster_amd64.deb
-RUN rm -rf /var/lib/apt/lists/* && rm /tmp/*.deb
+# Install MySQL client
+RUN apk add --no-cache mysql-client
 
 ENTRYPOINT [ "./entry.sh" ]
 CMD [ "app.py" ]
