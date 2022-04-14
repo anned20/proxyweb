@@ -90,7 +90,7 @@ def render_show_table_content(
         "show_table_info.html",
         content=content,
         read_only=mdb.get_read_only(server),
-        misc=config.misc
+        misc=mdb.get_config(config_file).misc
     )
 
 

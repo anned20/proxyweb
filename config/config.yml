@@ -88,14 +88,39 @@ misc:
       info: |
         Add a new rule to the mysql_query_rules table.
         https://proxysql.com/documentation/proxysql-configuration/
-      sql: "INSERT INTO mysql_query_rules (rule_id, active, match_digest, destination_hostgroup, apply) VALUES (1, 1, '^SELECT.*FOR UPDATE', 1, 1), (2, 1, '^SELECT', 2, 1);"
+      sql: "INSERT INTO mysql_query_rules (rule_id, active, match_digest, destination_hostgroup, apply) VALUES ({rule_id}, {active}, '{match_digest}', {destination_hostgroup}, {apply});"
+      variables:
+        rule_id:
+          type: integer
+          label: Rule ID
+          default: 1
+        active:
+          type: boolean
+          label: Active
+          default: true
+        match_digest:
+          type: string
+          label: Match digest
+          default: "^SELECT.*FOR UPDATE"
+        destination_hostgroup:
+          type: integer
+          label: Destination hostgroup
+          default: 1
+        apply:
+          type: boolean
+          label: Apply
+          default: true
 
     - title: "Update a global config variable"
       info: |
         Modify a variable.
         https://proxysql.com/documentation/proxysql-configuration/
-      sql: "SET mysql-max_connections = '4096';"
+      sql: "SET mysql-{variable} = '{max_connections}';"
       variables:
+        variable:
+          type: string
+          label: Variable name
+          default: max_connections
         max_connections:
           type: integer
           label: Max connections
@@ -107,16 +132,26 @@ misc:
         This status can be used to temporarily disable the server but finish running queries and transaction first.
         https://proxysql.com/documentation/proxysql-configuration/
       sql: >-
-        UPDATE mysql_servers SET status='OFFLINE_SOFT' WHERE hostname='172.16.0.2';
+        UPDATE mysql_servers SET status='OFFLINE_SOFT' WHERE hostname='{hostname}';
         LOAD MYSQL SERVERS TO RUNTIME;
+      variables:
+        hostname:
+          type: string
+          label: Hostname
+          default: "127.0.0.1"
 
     - title: "Set server to ONLINE status"
       info: |
         Set a server to ONLINE status.
         https://proxysql.com/documentation/proxysql-configuration/
       sql: >-
-        UPDATE mysql_servers SET status='ONLINE' WHERE hostname='172.16.0.2';
+        UPDATE mysql_servers SET status='ONLINE' WHERE hostname='{hostname}';
         LOAD MYSQL SERVERS TO RUNTIME;
+      variables:
+        hostname:
+          type: string
+          label: Hostname
+          default: "127.0.0.1"
 
   status:
     - title: "Show runtime server status"
